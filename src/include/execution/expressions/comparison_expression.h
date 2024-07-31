@@ -46,6 +46,8 @@ class ComparisonExpression : public AbstractExpression {
                     const Schema &right_schema) const -> Value override {
     Value lhs = GetChildAt(0)->EvaluateJoin(left_tuple, left_schema, right_tuple, right_schema);
     Value rhs = GetChildAt(1)->EvaluateJoin(left_tuple, left_schema, right_tuple, right_schema);
+    // fmt::print("left_tuple->GetValue = {}\n", lhs);
+    // fmt::print("right_tuple->GetValue = {}\n", rhs);
     return ValueFactory::GetBooleanValue(PerformComparison(lhs, rhs));
   }
 

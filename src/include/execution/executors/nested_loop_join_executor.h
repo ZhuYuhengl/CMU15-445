@@ -14,11 +14,13 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "execution/executor_context.h"
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/nested_loop_join_plan.h"
 #include "storage/table/tuple.h"
+// #include "type/value_factory.h"
 
 namespace bustub {
 
@@ -52,9 +54,19 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
   /** @return The output schema for the insert */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };
 
+  void RightChildInit();
+  void LeftChildInit();
+
  private:
   /** The NestedLoopJoin plan node to be executed. */
   const NestedLoopJoinPlanNode *plan_;
+  std::unique_ptr<AbstractExecutor> left_executor_;
+  std::unique_ptr<AbstractExecutor> right_executor_;
+  std::vector<std::pair<Tuple, RID>> left_tuples_;
+  std::vector<std::pair<Tuple, RID>> right_tuples_;
+  uint32_t left_index_;
+  uint32_t right_index_;
+  bool is_null_{true};
 };
 
 }  // namespace bustub

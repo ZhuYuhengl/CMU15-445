@@ -14,17 +14,91 @@
 #include "common/exception.h"
 
 namespace bustub {
+LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : replacer_size_(num_frames), k_(k) {
+  node_store_.clear();
+  frame_set_.clear();
+}
 
-LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : replacer_size_(num_frames), k_(k) {}
+auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
+  latch_.lock();
+  if (frame_set_.empty()) {
+    latch_.unlock();
+    return false;
+  }
+  auto it = frame_set_.begin();
+  *frame_id = it->GetFrameId();
+  node_store_.erase(it->GetFrameId());
+  frame_set_.erase(frame_set_.begin());
+  latch_.unlock();
+  return true;
+}
 
-auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool { return false; }
+void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType access_type) {
+  latch_.lock();
+  current_timestamp_++;
+  if (node_store_.find(frame_id) == node_store_.end()) {
+    if (node_store_.size() == replacer_size_) {
+      latch_.unlock();
+      throw Exception("Record Access exceed replacer_size");
+    }
+    LRUKNode node = LRUKNode(frame_id, k_);
+    node.AddHistory(current_timestamp_);
+    node_store_[frame_id] = node;
+  } else {
+    if (node_store_[frame_id].GetIsEvictable()) {
+      auto it = frame_set_.find(node_store_[frame_id]);
+      frame_set_.erase(it);
+      node_store_[frame_id].AddHistory(current_timestamp_);
+      frame_set_.insert(node_store_[frame_id]);
+    } else {
+      node_store_[frame_id].AddHistory(current_timestamp_);
+    }
+  }
+  latch_.unlock();
+}
 
-void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType access_type) {}
+void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
+  latch_.lock();
+  if (node_store_[frame_id].GetIsEvictable() == set_evictable) {
+    latch_.unlock();
+    return;
+  }
+  if (set_evictable) {
+    auto it = frame_set_.find(node_store_[frame_id]);
+    if (it == frame_set_.end()) {
+      frame_set_.insert(node_store_[frame_id]);
+    }
+    node_store_[frame_id].SetIsEvictable(set_evictable);
+  } else {
+    node_store_[frame_id].SetIsEvictable(set_evictable);
+    auto it = frame_set_.find(node_store_[frame_id]);
+    if (it != frame_set_.end()) {
+      frame_set_.erase(it);
+    }
+  }
+  latch_.unlock();
+}
 
-void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {}
+void LRUKReplacer::Remove(frame_id_t frame_id) {
+  latch_.lock();
+  auto it = node_store_.find(frame_id);
+  if (it != node_store_.end()) {
+    if (!(*it).second.GetIsEvictable()) {
+      latch_.lock();
+      throw Exception("remove not Evict-able page");
+    }
+    auto node = (*it).second;
+    node_store_.erase(frame_id);
+    frame_set_.erase(frame_set_.find(node));
+  }
+  latch_.unlock();
+}
 
-void LRUKReplacer::Remove(frame_id_t frame_id) {}
-
-auto LRUKReplacer::Size() -> size_t { return 0; }
+auto LRUKReplacer::Size() -> size_t {
+  latch_.lock();
+  size_t size = frame_set_.size();
+  latch_.unlock();
+  return size;
+}
 
 }  // namespace bustub

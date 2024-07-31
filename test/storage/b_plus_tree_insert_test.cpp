@@ -23,7 +23,7 @@ namespace bustub {
 
 using bustub::DiskManagerUnlimitedMemory;
 
-TEST(BPlusTreeTests, DISABLED_InsertTest1) {
+TEST(BPlusTreeTests, ISABLED_InsertTest1) {
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
@@ -62,7 +62,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest1) {
   delete bpm;
 }
 
-TEST(BPlusTreeTests, DISABLED_InsertTest2) {
+TEST(BPlusTreeTests, ISABLED_InsertTest2) {
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
@@ -120,7 +120,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest2) {
   delete bpm;
 }
 
-TEST(BPlusTreeTests, DISABLED_InsertTest3) {
+TEST(BPlusTreeTests, ISABLED_InsertTest3) {
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
@@ -138,7 +138,6 @@ TEST(BPlusTreeTests, DISABLED_InsertTest3) {
   RID rid;
   // create transaction
   auto *transaction = new Transaction(0);
-
   std::vector<int64_t> keys = {5, 4, 3, 2, 1};
   for (auto key : keys) {
     int64_t value = key & 0xFFFFFFFF;
@@ -157,7 +156,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest3) {
     int64_t value = key & 0xFFFFFFFF;
     EXPECT_EQ(rids[0].GetSlotNum(), value);
   }
-
+  std::cout << "1" << std::endl;
   int64_t start_key = 1;
   int64_t current_key = start_key;
   index_key.SetFromInteger(start_key);
@@ -167,7 +166,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest3) {
     EXPECT_EQ(location.GetSlotNum(), current_key);
     current_key = current_key + 1;
   }
-
+  std::cout << "2" << std::endl;
   EXPECT_EQ(current_key, keys.size() + 1);
 
   start_key = 3;
